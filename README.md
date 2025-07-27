@@ -25,8 +25,8 @@
 ## 🖥️ 使用方法
 
 ### 在线演示
-尝试游戏: [https://你的用户名.github.io/打字游戏/](https://你的用户名.github.io/打字游戏/)
-
+尝试游戏: [https://zsliuzi.github.io/Typing/](https://zsliuzi.github.io/Typing/)
+ 
 ### 本地设置
 1. 克隆仓库:
    `git clone https://github.com/ZSliuzi/Typing.git`
