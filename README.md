@@ -1,6 +1,6 @@
 # Typing
 
-![打字游戏截图](资源/截图/截图.png)
+![Typing截图](截图.png)
 
 一个美观且响应式的打字练习游戏，支持完整的中英文界面。通过各种文本类型（包括全字母句、成语和诗歌）测试并提高您的打字速度。
 
@@ -29,9 +29,9 @@
 
 ### 本地设置
 1. 克隆仓库:
-   git clone https://github.com/你的用户名/打字游戏.git
+   `git clone https://github.com/ZSliuzi/Typing.git`
 2. 进入项目目录:
-   cd 打字游戏
+   `cd Typing`
 3. 在浏览器中打开 `index.html`
 
 无需服务器设置 - 这是一个静态HTML/CSS/JS应用程序，可以直接在浏览器中运行。
