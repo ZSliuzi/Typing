@@ -1,0 +1,1110 @@
+<!DOCTYPE html>
+<html lang="ZH-CN">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Famous Text Typing Game - 中文支持</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        }
+
+        body {
+            background: linear-gradient(135deg, #6a11cb 0%, #2575fc 100%);
+            min-height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: flex-start;
+            padding: 20px;
+            padding-top: 40px;
+        }
+
+        .game-container {
+            width: 100%;
+            max-width: 900px;
+            background: rgba(255, 255, 255, 0.95);
+            border-radius: 20px;
+            box-shadow: 0 15px 35px rgba(0, 0, 0, 0.3);
+            overflow: hidden;
+            padding: 30px;
+            position: relative;
+        }
+
+        .title {
+            text-align: center;
+            font-size: 2.8rem;
+            color: #2c3e50;
+            margin-bottom: 25px;
+            text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.1);
+            font-weight: 700;
+            letter-spacing: 1px;
+        }
+
+        /* --- New Styles for Language Selection (Top Left) --- */
+        .language-selection {
+            position: absolute;
+            top: 15px;
+            left: 15px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            background-color: rgba(227, 242, 253, 0.8);
+            padding: 8px 12px;
+            border-radius: 20px;
+            box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+            z-index: 5;
+        }
+
+        .language-selection label {
+            font-weight: 600;
+            color: #2c3e50;
+            font-size: 0.9rem;
+            margin: 0;
+            white-space: nowrap;
+        }
+
+        .language-selection select {
+            padding: 6px 10px;
+            border: 1px solid #ccc;
+            border-radius: 5px;
+            font-size: 0.9rem;
+            min-width: 80px;
+        }
+
+        /* --- End Language Selection Styles --- */
+        /* --- Styles for Text Selection (Top Right) --- */
+        /*---结束语言选择样式---*/
+        /*---文本选择样式（右上）---*/
+        .text-selection {
+            position: absolute;
+            top: 15px;
+            right: 15px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            background-color: rgba(227, 242, 253, 0.8);
+            padding: 8px 12px;
+            border-radius: 20px;
+            box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+            z-index: 5;
+        }
+
+        .text-selection label {
+            font-weight: 600;
+            color: #2c3e50;
+            font-size: 0.9rem;
+            margin: 0;
+            white-space: nowrap;
+        }
+
+        .text-selection select {
+            padding: 6px 10px;
+            border: 1px solid #ccc;
+            border-radius: 5px;
+            font-size: 0.9rem;
+            min-width: 120px;
+        }
+
+        .text-selection .btn {
+            background: #27ae60;
+            padding: 6px 12px;
+            font-size: 0.9rem;
+            margin: 0;
+            border-radius: 5px;
+        }
+
+        .text-selection textarea {
+            display: none;
+            position: absolute;
+            top: 100%;
+            right: 0;
+            width: 300px;
+            height: 100px;
+            padding: 8px;
+            border: 1px solid #ccc;
+            border-radius: 5px;
+            font-size: 0.9rem;
+            z-index: 4;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
+        }
+
+        /* --- End Text Selection Styles --- */
+        /*---结束文本选择样式---*/
+        .text-display {
+            background: #f8f9fa;
+            border-radius: 12px;
+            padding: 25px;
+            margin-bottom: 25px;
+            height: 200px;
+            overflow-y: auto;
+            border: 2px solid #e9ecef;
+            box-shadow: inset 0 2px 5px rgba(0, 0, 0, 0.05);
+            font-size: 1.4rem;
+            line-height: 1.6;
+            position: relative;
+            white-space: pre-wrap;
+            /* Preserve spaces and wrap */
+            /*保留空间并包裹*/
+            word-break: break-all;
+            /* Break long words/strings */
+            /*打断长单词/字符串*/
+        }
+
+        .text-display::-webkit-scrollbar {
+            width: 8px;
+        }
+
+        .text-display::-webkit-scrollbar-track {
+            background: #f1f1f1;
+            border-radius: 4px;
+        }
+
+        .text-display::-webkit-scrollbar-thumb {
+            background: #b8c2cc;
+            border-radius: 4px;
+        }
+
+        .char {
+            transition: all 0.1s ease;
+        }
+
+        .char.correct {
+            color: #27ae60;
+            background-color: rgba(39, 174, 96, 0.1);
+        }
+
+        .char.current {
+            background-color: #f1c40f;
+            color: #2c3e50;
+            border-radius: 3px;
+            padding: 0 2px;
+            box-shadow: 0 0 5px rgba(241, 196, 15, 0.5);
+            position: relative;
+            /* For absolute positioning of input helper */
+            /*用于输入助手的绝对定位*/
+        }
+
+        .char.incorrect {
+            color: #e74c3c;
+            background-color: rgba(231, 76, 60, 0.15);
+            text-decoration: underline;
+        }
+
+        .stats-container {
+            display: flex;
+            justify-content: space-around;
+            background: #3498db;
+            color: white;
+            padding: 20px;
+            border-radius: 12px;
+            margin-bottom: 25px;
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.1);
+        }
+
+        .stat-box {
+            text-align: center;
+        }
+
+        .stat-value {
+            font-size: 2.2rem;
+            font-weight: 700;
+        }
+
+        .stat-label {
+            font-size: 1.1rem;
+            opacity: 0.9;
+        }
+
+        .keyboard-container {
+            background: #2c3e50;
+            border-radius: 12px;
+            padding: 20px;
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.2);
+            margin-bottom: 20px;
+        }
+
+        .keyboard-row {
+            display: flex;
+            justify-content: center;
+            margin-bottom: 10px;
+        }
+
+        .keyboard-row:last-child {
+            margin-bottom: 0;
+        }
+
+        .key {
+            min-width: 40px;
+            height: 50px;
+            background: #ecf0f1;
+            margin: 0 5px;
+            border-radius: 8px;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            font-weight: 600;
+            color: #2c3e50;
+            box-shadow: 0 4px 0 #bdc3c7;
+            cursor: default;
+            user-select: none;
+            transition: all 0.1s ease;
+        }
+
+        .key.space {
+            width: 300px;
+        }
+
+        .key.pressed {
+            background: #3498db;
+            color: white;
+            transform: translateY(4px);
+            box-shadow: 0 0 0 #bdc3c7;
+        }
+
+        .controls {
+            display: flex;
+            justify-content: center;
+            margin-top: 5px;
+            margin-bottom: 10px;
+            gap: 15px;
+        }
+
+        .btn {
+            background: #3498db;
+            color: white;
+            border: none;
+            padding: 12px 30px;
+            font-size: 1.1rem;
+            border-radius: 50px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            font-weight: 600;
+            box-shadow: 0 4px 10px rgba(52, 152, 219, 0.3);
+        }
+
+        .btn:hover {
+            background: #2980b9;
+            transform: translateY(-3px);
+            box-shadow: 0 6px 15px rgba(52, 152, 219, 0.4);
+        }
+
+        .btn:active {
+            transform: translateY(1px);
+        }
+
+        .result-screen {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(44, 62, 80, 0.95);
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            color: white;
+            border-radius: 20px;
+            z-index: 10;
+            opacity: 0;
+            pointer-events: none;
+            transition: opacity 0.5s ease;
+        }
+
+        .result-screen.show {
+            opacity: 1;
+            pointer-events: all;
+        }
+
+        .result-title {
+            font-size: 2.5rem;
+            margin-bottom: 20px;
+        }
+
+        .result-stats {
+            font-size: 1.8rem;
+            margin-bottom: 30px;
+            text-align: center;
+        }
+
+        .highlight {
+            color: #f1c40f;
+            font-weight: 700;
+        }
+
+        /* --- Hidden Input for Chinese IME --- */
+        /*---中文输入法的隐藏输入---*/
+        #hiddenInput {
+            position: absolute;
+            opacity: 0;
+            width: 0;
+            height: 0;
+            z-index: -1;
+            /* Keep it hidden but in the DOM */
+            /*将其隐藏在DOM中*/
+        }
+
+        /* --- End Hidden Input --- */
+        /*---结束隐藏输入---*/
+        @media (max-width: 768px) {
+            body {
+                padding: 10px;
+                padding-top: 20px;
+            }
+
+            .game-container {
+                padding: 15px;
+            }
+
+            .title {
+                font-size: 2.2rem;
+            }
+
+            .language-selection,
+            .text-selection {
+                top: 10px;
+                padding: 6px 10px;
+            }
+
+            .language-selection label,
+            .text-selection label {
+                font-size: 0.8rem;
+            }
+
+            .language-selection select,
+            .text-selection select {
+                padding: 5px 8px;
+                font-size: 0.8rem;
+            }
+
+            .language-selection select {
+                min-width: 60px;
+            }
+
+            .text-selection select {
+                min-width: 100px;
+            }
+
+            .text-selection .btn {
+                padding: 5px 10px;
+                font-size: 0.8rem;
+            }
+
+            .text-selection textarea {
+                width: 250px;
+                height: 80px;
+                font-size: 0.8rem;
+            }
+
+            .text-display {
+                font-size: 1.1rem;
+                height: 150px;
+                padding: 15px;
+            }
+
+            .stat-value {
+                font-size: 1.8rem;
+            }
+
+            .key {
+                min-width: 30px;
+                height: 40px;
+                font-size: 0.9rem;
+            }
+
+            .key.space {
+                width: 200px;
+            }
+
+            .controls {
+                flex-direction: column;
+                align-items: center;
+            }
+
+            .btn {
+                width: 80%;
+                margin-bottom: 10px;
+            }
+
+            .btn:last-child {
+                margin-bottom: 0;
+            }
+        }
+    </style>
+</head>
+
+<body>
+    <div class="game-container">
+        <h1 class="title">Famous Text</h1>
+        <!-- Language Selection Area (Top Left) -->
+        <!--语言选择区（左上）-->
+        <div class="language-selection">
+            <label for="languageSelect">语言:</label>
+            <select id="languageSelect">
+                <option value="en">English</option>
+                <option value="zh">中文</option>
+            </select>
+        </div>
+        <!-- Text Selection Area (Top Right) -->
+         <!--语言选择区（右上）-->
+        <div class="text-selection">
+            <label for="textSelect">文本:</label>
+            <select id="textSelect">
+                <option value="default_en">默认 (English)</option>
+                <option value="pangram_en">全字母 (English)</option>
+                <option value="lorem_en">乱数假文 (English)</option>
+                <option value="default_zh">默认 (中文)</option>
+                <option value="idiom_zh">成语 (中文)</option>
+                <option value="poem_zh">诗歌 (中文)</option>
+                <option value="custom">自定义</option>
+            </select>
+            <button class="btn" id="applyTextBtn">应用</button>
+            <textarea id="customText" placeholder="输入自定义文本..."></textarea>
+        </div>
+        <div class="text-display" id="textDisplay">
+            <!-- Text will be inserted here by JavaScript -->
+            <!--文本将通过JavaScript插入此处-->
+        </div>
+        <!-- Hidden Input for Chinese IME -->
+        <!--中文输入法的隐藏输入-->
+        <textarea id="hiddenInput" autocomplete="off" autocorrect="off" autocapitalize="off"
+            spellcheck="false"></textarea>
+        <div class="stats-container">
+            <div class="stat-box">
+                <div class="stat-value" id="wpm">0</div>
+                <div class="stat-label">WPM/CPM</div>
+            </div>
+            <div class="stat-box">
+                <div class="stat-value" id="time">0s</div>
+                <div class="stat-label">Time</div>
+            </div>
+            <div class="stat-box">
+                <div class="stat-value" id="accuracy">100%</div>
+                <div class="stat-label">Accuracy</div>
+            </div>
+        </div>
+        <div class="keyboard-container">
+            <div class="keyboard-row">
+                <div class="key" data-key="q">Q</div>
+                <div class="key" data-key="w">W</div>
+                <div class="key" data-key="e">E</div>
+                <div class="key" data-key="r">R</div>
+                <div class="key" data-key="t">T</div>
+                <div class="key" data-key="y">Y</div>
+                <div class="key" data-key="u">U</div>
+                <div class="key" data-key="i">I</div>
+                <div class="key" data-key="o">O</div>
+                <div class="key" data-key="p">P</div>
+            </div>
+            <div class="keyboard-row">
+                <div class="key" data-key="a">A</div>
+                <div class="key" data-key="s">S</div>
+                <div class="key" data-key="d">D</div>
+                <div class="key" data-key="f">F</div>
+                <div class="key" data-key="g">G</div>
+                <div class="key" data-key="h">H</div>
+                <div class="key" data-key="j">J</div>
+                <div class="key" data-key="k">K</div>
+                <div class="key" data-key="l">L</div>
+            </div>
+            <div class="keyboard-row">
+                <div class="key" data-key="z">Z</div>
+                <div class="key" data-key="x">X</div>
+                <div class="key" data-key="c">C</div>
+                <div class="key" data-key="v">V</div>
+                <div class="key" data-key="b">B</div>
+                <div class="key" data-key="n">N</div>
+                <div class="key" data-key="m">M</div>
+            </div>
+            <div class="keyboard-row">
+                <div class="key space" data-key=" ">SPACE</div>
+            </div>
+        </div>
+        <div class="controls">
+            <button class="btn" id="resetBtn">重置游戏</button>
+            <button class="btn" id="playAgainBtn">再玩一次</button>
+        </div>
+        <div class="result-screen" id="resultScreen">
+            <h2 class="result-title">游戏完成!</h2>
+            <div class="result-stats">
+                您的打字速度: <span class="highlight" id="finalWpm">0</span> WPM/CPM<br>
+                耗时: <span class="highlight" id="finalTime">0</span> 秒<br>
+                准确率: <span class="highlight" id="finalAccuracy">100</span>%
+            </div>
+            <button class="btn" id="playAgainBtnFinal">再玩一次</button>
+        </div>
+    </div>
+    <script>
+        document.addEventListener('DOMContentLoaded', () => {
+            // Game elements
+            //游戏元素
+            const gameContainer = document.querySelector('.game-container');
+            const textDisplay = document.getElementById('textDisplay');
+            const wpmElement = document.getElementById('wpm');
+            const timeElement = document.getElementById('time');
+            const accuracyElement = document.getElementById('accuracy');
+            const resetBtn = document.getElementById('resetBtn');
+            const resultScreen = document.getElementById('resultScreen');
+            const finalWpm = document.getElementById('finalWpm');
+            const finalTime = document.getElementById('finalTime');
+            const finalAccuracy = document.getElementById('finalAccuracy');
+            const playAgainBtn = document.getElementById('playAgainBtn');
+            const playAgainBtnFinal = document.getElementById('playAgainBtnFinal');
+            // --- Elements for Text & Language Selection ---
+            //---文本和语言选择元素---
+            const languageSelect = document.getElementById('languageSelect');
+            const textSelect = document.getElementById('textSelect');
+            const customText = document.getElementById('customText');
+            const applyTextBtn = document.getElementById('applyTextBtn');
+            // --- End Elements ---
+            // --- Hidden Input for IME ---
+            //---末端元件---
+            //---IME的隐藏输入---
+            const hiddenInput = document.getElementById('hiddenInput');
+            // --- End Hidden Input ---
+            // --- Predefined Sample Texts (Grouped by language) ---
+            //---结束隐藏输入---
+            //---预定义示例文本（按语言分组）---
+            const texts = {
+                en: {
+                    default_en: "The quick brown fox jumps over the lazy dog. This pangram contains every letter of the alphabet at least once. It is commonly used for typing practice and testing fonts. Typing speed is measured in words per minute (WPM). Professional typists can achieve speeds of over 100 WPM. Accuracy is equally important as speed in typing. Regular practice can significantly improve both speed and accuracy.",
+                    pangram_en: "Pack my box with five dozen liquor jugs. How vexingly quick daft zebras jump! Sphinx of black quartz, judge my vow. The five boxing wizards jump quickly. Bright vixens jump; dozy fowl quack.",
+                    lorem_en: "Lorem ipsum dolor sit amet, consectetur adipiscing elit. Sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat. Duis aute irure dolor in reprehenderit in voluptate velit esse cillum dolore eu fugiat nulla pariatur. Excepteur sint occaecat cupidatat non proident, sunt in culpa qui officia deserunt mollit anim id est laborum."
+                },
+                zh: {
+                    default_zh: "学而时习之，不亦说乎？有朋自远方来，不亦乐乎？人不知而不愠，不亦君子乎？知之为知之，不知为不知，是知也。敏而好学，不耻下问。默而识之，学而不厌，诲人不倦。",
+                    idiom_zh: "一心一意 三心二意 画蛇添足 守株待兔 掩耳盗铃 亡羊补牢 刻舟求剑 拔苗助长 对牛弹琴 盲人摸象 不识抬举 胸有成竹 画龙点睛 走马观花 水落石出 雪中送炭 望梅止渴 望洋兴叹 杯弓蛇影 草木皆兵",
+                    poem_zh: "春晓 孟浩然 春眠不觉晓 处处闻啼鸟 夜来风雨声 花落知多少 静夜思 李白 床前明月光 疑是地上霜 举头望明月 低头思故乡"
+                }
+            };
+            // --- End Predefined Texts ---
+            // Game variables
+            //---结束预定义文本---
+            //游戏变量
+            let currentLanguage = 'en';
+            let currentTextKey = 'default_en';
+            let currentText = texts.en.default_en;
+            let textArray = []; // Will hold characters
+            let currentIndex = 0;
+            let startTime = null;
+            let timerInterval = null;
+            let correctChars = 0; // Count of correctly typed chars
+            let totalInputs = 0; // Total number of inputs (keypresses or confirmed compositions)
+
+            // --- New variable for IME state (used only for Chinese) ---
+            let isComposing = false;
+            // --- End New variable ---
+
+            // Initialize the game
+            function initGame() {
+                currentIndex = 0;
+                startTime = null;
+                correctChars = 0;
+                totalInputs = 0;
+                clearInterval(timerInterval);
+                resultScreen.classList.remove('show');
+                // --- Reset IME state ---
+                isComposing = false;
+                // --- End Reset IME state ---
+
+                // Process text into array of characters
+                textArray = currentText.split('');
+                renderText();
+                updateStats();
+
+                // --- Language-specific initialization ---
+                setupInputMethod();
+                // --- End Language-specific initialization ---
+
+                textDisplay.focus();
+                scrollToOptimalPosition();
+            }
+
+            function scrollToOptimalPosition() {
+                const containerRect = gameContainer.getBoundingClientRect();
+                const windowHeight = window.innerHeight;
+                const desiredScrollTop = containerRect.top + window.scrollY - 20;
+                const keyboardContainer = document.querySelector('.keyboard-container');
+                const keyboardBottom = keyboardContainer.getBoundingClientRect().bottom + window.scrollY;
+                const scrollForKeyboardBottom = keyboardBottom - windowHeight + 20;
+                let finalScrollTop = Math.max(window.scrollY, desiredScrollTop);
+                if (keyboardBottom > (window.scrollY + windowHeight - 20)) {
+                    finalScrollTop = Math.max(finalScrollTop, scrollForKeyboardBottom);
+                }
+                window.scrollTo({
+                    top: finalScrollTop,
+                    behavior: 'smooth'
+                });
+            }
+
+            function renderText() {
+                textDisplay.innerHTML = '';
+                textArray.forEach((char, index) => {
+                    const span = document.createElement('span');
+                    span.className = 'char';
+                    span.textContent = char;
+                    if (index < currentIndex) {
+                        span.classList.add('correct');
+                    } else if (index === currentIndex) {
+                        span.classList.add('current');
+                    }
+                    textDisplay.appendChild(span);
+                });
+                if (currentIndex < textArray.length && textDisplay.children[currentIndex]) {
+                    const currentCharElement = textDisplay.children[currentIndex];
+                    currentCharElement.scrollIntoView({ behavior: 'smooth', block: 'center' });
+                    // Position the hidden input over the current character (only for Chinese)
+                    if (currentLanguage === 'zh') {
+                        positionHiddenInput();
+                    }
+                }
+            }
+
+            // Position the hidden input area over the current character (only used for Chinese)
+            function positionHiddenInput() {
+                if (currentIndex < textArray.length && textDisplay.children[currentIndex]) {
+                    const currentElement = textDisplay.children[currentIndex];
+                    const rect = currentElement.getBoundingClientRect();
+                    const containerRect = textDisplay.getBoundingClientRect();
+                    // Position relative to the text-display container
+                    hiddenInput.style.left = (rect.left - containerRect.left + textDisplay.scrollLeft) + 'px';
+                    hiddenInput.style.top = (rect.top - containerRect.top + textDisplay.scrollTop) + 'px';
+                    hiddenInput.style.width = rect.width + 'px';
+                    hiddenInput.style.height = rect.height + 'px';
+                    // Clear and focus the hidden input
+                    hiddenInput.value = '';
+                    // hiddenInput.focus(); // Focus is managed by setupInputMethod
+                }
+            }
+
+            function updateStats() {
+                wpmElement.textContent = calculateSpeed();
+                timeElement.textContent = startTime ? `${Math.floor((new Date() - startTime) / 1000)}s` : '0s';
+                accuracyElement.textContent = totalInputs > 0 ? `${Math.floor((correctChars / totalInputs) * 100)}%` : '100%';
+            }
+
+            // Calculate WPM (English) or CPM (Chinese)
+            function calculateSpeed() {
+                if (!startTime) return 0;
+                const timeInMinutes = (new Date() - startTime) / 60000;
+                if (currentLanguage === 'en') {
+                    const wordsTyped = correctChars / 5; // Standard WPM calculation
+                    return Math.max(0, Math.floor(wordsTyped / timeInMinutes));
+                } else if (currentLanguage === 'zh') {
+                    const charsTyped = correctChars; // For Chinese, report CPM (Chars Per Minute)
+                    return Math.max(0, Math.floor(charsTyped / timeInMinutes));
+                }
+                return 0;
+            }
+
+            function startTimer() {
+                startTime = new Date();
+                timerInterval = setInterval(updateStats, 1000);
+            }
+
+            function triggerVirtualKeyPressFeedback(keyChar) {
+                let dataKey = keyChar;
+                if (keyChar === ' ') dataKey = ' ';
+                const virtualKeyElement = document.querySelector(`.key[data-key="${dataKey}"]`);
+                if (virtualKeyElement) {
+                    virtualKeyElement.classList.add('pressed');
+                    setTimeout(() => {
+                        virtualKeyElement.classList.remove('pressed');
+                    }, 150);
+                }
+            }
+
+            // --- New function to handle committed text from IME (Chinese only) ---
+            // --- Modified function to handle committed text from IME (Chinese only) ---
+            // Fixes the accuracy calculation issue when multiple characters are input at once.
+            function handleCommittedText(committedText) {
+                if (!committedText || currentLanguage !== 'zh') return; // Only for Chinese mode
+                if (!startTime) {
+                    startTimer();
+                }
+
+                // --- FIX STARTS HERE ---
+                // Count the number of characters input, not the number of compositions.
+                // This prevents accuracy > 100% when typing multiple characters (e.g., via Pinyin).
+                const inputLength = committedText.length;
+                if (inputLength === 0) return; // Guard clause for empty input
+
+                totalInputs += inputLength; // Increment by the actual number of characters typed
+                // --- FIX ENDS HERE ---
+
+                let isCorrect = true;
+                let correctCharCount = 0; // Local counter for correct characters in this commit
+
+                // Check if the committed text matches the target text at the current position
+                for (let i = 0; i < committedText.length; i++) {
+                    const typedChar = committedText[i];
+                    if (currentIndex + i < textArray.length) {
+                        const targetChar = textArray[currentIndex + i];
+                        if (typedChar === targetChar) {
+                            correctCharCount++; // Increment local correct counter
+                        } else {
+                            isCorrect = false;
+                            // Mark the first mismatched character as incorrect
+                            if (textDisplay.children[currentIndex + i]) {
+                                textDisplay.children[currentIndex + i].classList.add('incorrect');
+                            }
+                            // Note: We don't break immediately to allow marking subsequent chars if needed,
+                            // but isCorrect is already false. For this game's logic, breaking is fine.
+                             // --- Optional Enhancement: Mark all subsequent chars as incorrect too if desired ---
+                             // for (let j = i + 1; j < committedText.length; j++) {
+                             //     if (textDisplay.children[currentIndex + j]) {
+                             //         textDisplay.children[currentIndex + j].classList.add('incorrect');
+                             //     }
+                             // }
+                             // --- End Optional Enhancement ---
+                            break; // Stop checking on first mismatch for this game's logic
+                        }
+                    } else {
+                        // Committed text is longer than the remaining target text
+                        isCorrect = false;
+                        // --- Optional Enhancement: Mark extra chars as incorrect if display allows ---
+                        // This part is tricky because textArray might be shorter than committedText.
+                        // We rely on the length check `currentIndex + i < textArray.length` above.
+                        // If we went beyond, those extra chars are implicitly wrong.
+                        // --- End Optional Enhancement ---
+                        break;
+                    }
+                }
+
+                // Update the global correct character count based on this commit
+                correctChars += correctCharCount;
+
+                if (isCorrect && correctCharCount === inputLength) {
+                    // All characters in the committed text were correct
+                    // Update currentIndex and UI for correct characters
+                    for (let i = 0; i < committedText.length; i++) {
+                        // correctChars was already updated above
+                        currentIndex++;
+                        if (textDisplay.children[currentIndex - 1]) {
+                            textDisplay.children[currentIndex - 1].classList.remove('incorrect'); // Remove any previous incorrect mark
+                            textDisplay.children[currentIndex - 1].classList.add('correct');
+                        }
+                    }
+                    // Provide visual feedback for the first character typed (approximation)
+                    if (committedText.length > 0) {
+                        triggerVirtualKeyPressFeedback(committedText[0]);
+                    }
+                    // Check for game end
+                    if (currentIndex === textArray.length) {
+                        endGame();
+                    }
+                } else {
+                    // Some or all characters were incorrect.
+                    // correctChars was updated with the number that were actually correct.
+                    // totalInputs was updated with the total number attempted.
+                    // The accuracy calculation in updateStats() will now be correct.
+                    // We already marked the first mismatch (and optionally others) above.
+                    // Provide visual feedback for the first character typed (approximation)
+                     if (committedText.length > 0) {
+                        triggerVirtualKeyPressFeedback(committedText[0]); // Feedback for the attempt
+                    }
+                }
+                // Update UI after processing the committed text
+                renderText(); // Re-render to update current character highlight and input position
+                updateStats(); // Update stats with corrected logic
+                // Ensure focus stays on the hidden input
+                hiddenInput.focus();
+            }
+            // --- End Modified function ---
+            // --- End New function ---
+
+            // --- Modified Main Input Handler for Hidden Textarea (Chinese only) ---
+            // This now primarily handles non-IME input (like pasted text) in Chinese mode
+            // and ignores input during composition
+            function handleHiddenInput() {
+                if (currentLanguage !== 'zh') return; // Only for Chinese mode
+
+                // If IME is active, ignore input events from the hidden field
+                // They will be handled by the compositionend event
+                if (isComposing) {
+                    return;
+                }
+
+                const inputValue = hiddenInput.value;
+                if (!inputValue) return;
+
+                // Handle pasted text or other non-IME input in Chinese mode
+                if (!startTime) {
+                    startTimer();
+                }
+
+                // Process each character in the input string one by one
+                for (let i = 0; i < inputValue.length; i++) {
+                    const typedChar = inputValue[i];
+                    totalInputs++; // Increment for each character processed
+                    if (currentIndex < textArray.length) {
+                        const currentTargetChar = textArray[currentIndex];
+                        triggerVirtualKeyPressFeedback(typedChar);
+                        if (typedChar === currentTargetChar) {
+                            correctChars++;
+                            currentIndex++;
+                            if (currentIndex === textArray.length) {
+                                endGame();
+                                break;
+                            }
+                        } else {
+                            if (textDisplay.children[currentIndex]) {
+                                textDisplay.children[currentIndex].classList.add('incorrect');
+                            }
+                        }
+                    }
+                }
+                renderText();
+                updateStats();
+                hiddenInput.value = '';
+                hiddenInput.focus();
+            }
+            // --- End Modified Main Input Handler ---
+
+            // --- Keydown Handler for English and Backspace/Controls ---
+            function handleKeyDown(e) {
+                // Common controls: Backspace and Reset
+                if (e.key === 'Backspace') {
+                    e.preventDefault();
+                    if (currentIndex > 0 && currentIndex < textArray.length) {
+                        currentIndex--;
+                        if (textDisplay.children[currentIndex] && textDisplay.children[currentIndex].classList.contains('correct')) {
+                            correctChars--;
+                        }
+                        if (textDisplay.children[currentIndex]) {
+                            textDisplay.children[currentIndex].classList.remove('incorrect');
+                        }
+                        // Adjust totalInputs for backspace, preventing >100% accuracy
+                        if (totalInputs > correctChars) {
+                            totalInputs--;
+                        }
+                        renderText();
+                        updateStats();
+                        // Refocus appropriately
+                        if (currentLanguage === 'zh') {
+                            hiddenInput.focus();
+                        } else {
+                            textDisplay.focus(); // Or wherever English input is expected
+                        }
+                    }
+                    return;
+                }
+
+                if (e.key === 'Enter' && !isComposing) {
+                    initGame();
+                    return;
+                }
+
+                // --- English-specific typing logic ---
+                if (currentLanguage === 'en' && !isComposing) {
+                    // Prevent default for typing keys to avoid interference
+                    // but allow browser shortcuts (Ctrl+C etc.) by not preventing default universally
+                    if (e.key.length === 1) { // Represents a character key
+                        e.preventDefault();
+
+                        const typedChar = e.key;
+                        if (!startTime) {
+                            startTimer();
+                        }
+
+                        totalInputs++; // Count the keypress
+                        triggerVirtualKeyPressFeedback(typedChar);
+
+                        if (currentIndex < textArray.length) {
+                            const currentTargetChar = textArray[currentIndex];
+                            if (typedChar === currentTargetChar) {
+                                correctChars++;
+                                currentIndex++;
+                                if (currentIndex === textArray.length) {
+                                    endGame();
+                                }
+                            } else {
+                                if (textDisplay.children[currentIndex]) {
+                                    textDisplay.children[currentIndex].classList.add('incorrect');
+                                }
+                            }
+                        }
+                        renderText();
+                        updateStats();
+                    }
+                    // Optionally prevent default for other non-control keys if needed
+                    // else if (!e.ctrlKey && !e.altKey && !e.metaKey) {
+                    //     e.preventDefault();
+                    // }
+                }
+                // --- End English-specific logic ---
+
+                // --- Chinese-specific: Prevent default for other keys during composition or input ---
+                // This stops keys like arrows or function keys from affecting the hidden input unexpectedly
+                // if (currentLanguage === 'zh' && !isComposing) {
+                //     // Uncomment the lines below if you find other keys are interfering
+                //     // if (e.key.length === 1 || e.key === 'Delete' || e.key === 'ArrowLeft' || e.key === 'ArrowRight') {
+                //     //     e.preventDefault();
+                //     // }
+                // }
+                // --- End Chinese-specific prevention ---
+            }
+            // --- End Keydown Handler ---
+
+
+            // --- Function to setup input method based on language ---
+            function setupInputMethod() {
+                if (currentLanguage === 'zh') {
+                    // --- Enable Chinese IME mode ---
+                    hiddenInput.style.display = 'block'; // Make sure it's visible in DOM
+                    hiddenInput.disabled = false; // Enable it
+                    hiddenInput.focus();
+                    positionHiddenInput(); // Position it correctly
+
+                    // Add event listeners specific to Chinese IME
+                    hiddenInput.addEventListener('input', handleHiddenInput);
+                    hiddenInput.addEventListener('keydown', handleKeyDown);
+                    hiddenInput.addEventListener('compositionstart', handleCompositionStart);
+                    hiddenInput.addEventListener('compositionend', handleCompositionEnd);
+
+                    // Remove English keydown listener from document/body if it was added elsewhere
+                    // (In this structure, it wasn't, but good practice if refactoring)
+                    // document.removeEventListener('keydown', handleKeyDown);
+
+                } else {
+                    // --- Enable English keydown mode ---
+                    hiddenInput.style.display = 'none'; // Hide the hidden input
+                    hiddenInput.disabled = true; // Disable it
+
+                    // Remove event listeners used for Chinese IME (if they were added)
+                    hiddenInput.removeEventListener('input', handleHiddenInput);
+                    hiddenInput.removeEventListener('compositionstart', handleCompositionStart);
+                    hiddenInput.removeEventListener('compositionend', handleCompositionEnd);
+                    // Note: We keep the keydown listener on hiddenInput for Backspace/Enter
+                    // Or we could remove it and add it to document for English, but keeping it on hiddenInput
+                    // and relying on focus is simpler here.
+
+                    // Ensure main area can receive focus for key events if needed
+                    // textDisplay.tabIndex = 0; // Make it focusable if necessary
+                    textDisplay.focus();
+
+                    // Add keydown listener for direct English typing
+                    // Since we are attaching to `document`, we need to be careful about scope
+                    // Attaching to the game container or document is common.
+                    document.addEventListener('keydown', handleKeyDown);
+                }
+            }
+
+            // Separate functions for event listeners to allow clean adding/removing
+            function handleCompositionStart() {
+                isComposing = true;
+            }
+
+            function handleCompositionEnd(event) {
+                isComposing = false;
+                const committedText = event.data;
+                handleCommittedText(committedText);
+            }
+            // --- End setup function ---
+
+
+            function endGame() {
+                clearInterval(timerInterval);
+                finalWpm.textContent = calculateSpeed();
+                finalTime.textContent = Math.floor((new Date() - startTime) / 1000);
+                finalAccuracy.textContent = totalInputs > 0 ? Math.floor((correctChars / totalInputs) * 100) : 100;
+                resultScreen.classList.add('show');
+
+                // Disable input after game ends
+                if (currentLanguage === 'zh') {
+                    hiddenInput.disabled = true;
+                } else {
+                    document.removeEventListener('keydown', handleKeyDown);
+                }
+            }
+
+            function handleVirtualKeyPress(e) {
+                const key = e.target.dataset.key;
+                if (key) {
+                    e.target.classList.add('pressed');
+                    setTimeout(() => {
+                        e.target.classList.remove('pressed');
+                    }, 150);
+                    triggerVirtualKeyPressFeedback(key);
+                }
+            }
+
+            // --- Functionality for Text & Language Selection ---
+            function handleLanguageChange() {
+                // Remove the document keydown listener if it was added for English
+                document.removeEventListener('keydown', handleKeyDown);
+
+                currentLanguage = languageSelect.value;
+                updateTextOptions();
+                const defaultTextKey = currentLanguage === 'en' ? 'default_en' : 'default_zh';
+                textSelect.value = defaultTextKey;
+                currentTextKey = defaultTextKey;
+                currentText = texts[currentLanguage][defaultTextKey] || texts.en.default_en;
+                initGame();
+            }
+
+            function updateTextOptions() {
+                const options = textSelect.querySelectorAll('option');
+                options.forEach(option => {
+                    if (option.value !== 'custom') {
+                        const langPart = option.value.split('_').pop();
+                        if (langPart === 'en' || langPart === 'zh') {
+                            option.style.display = (langPart === currentLanguage) ? 'block' : 'none';
+                        }
+                    }
+                });
+            }
+
+            function handleTextSelection() {
+                const selectedValue = textSelect.value;
+                currentTextKey = selectedValue;
+                if (selectedValue === 'custom') {
+                    customText.style.display = 'block';
+                } else {
+                    customText.style.display = 'none';
+                    if (texts[currentLanguage] && texts[currentLanguage][selectedValue] !== undefined) {
+                        currentText = texts[currentLanguage][selectedValue];
+                    } else {
+                        currentText = texts.en.default_en;
+                    }
+                    initGame();
+                }
+            }
+
+            function applyCustomText() {
+                const userText = customText.value.trim();
+                if (userText) {
+                    currentText = userText;
+                    customText.style.display = 'none';
+                    initGame();
+                } else {
+                    alert("请输入自定义文本内容！");
+                }
+            }
+            // --- End Functionality ---
+
+            // --- Initial Event Listeners (some are managed dynamically) ---
+            // These are initial setup, others are added/removed by setupInputMethod
+            resetBtn.addEventListener('click', initGame);
+            playAgainBtn.addEventListener('click', initGame);
+            playAgainBtnFinal.addEventListener('click', initGame);
+            document.querySelectorAll('.key').forEach(key => {
+                key.addEventListener('click', handleVirtualKeyPress);
+            });
+            languageSelect.addEventListener('change', handleLanguageChange);
+            textSelect.addEventListener('change', handleTextSelection);
+            applyTextBtn.addEventListener('click', applyCustomText);
+            // --- End Initial Event Listeners ---
+
+            // Initialize the game on page load
+            updateTextOptions();
+            initGame();
+        });
+    </script>
+</body>
+
+</html>
